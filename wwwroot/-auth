@@ -1,0 +1,4 @@
+#http-redirect
+#https-only
+realm Data
+user guest guest:guestpw

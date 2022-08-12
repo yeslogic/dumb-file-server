@@ -1,0 +1,98 @@
+#!/usr/bin/env python3
+
+import cgi
+import logging
+import os
+import tempfile
+
+# Enable tracebacks during development
+#import cgitb
+#cgitb.enable()
+
+DATADIR = "data"
+TMPDIR = "data/.tmp"
+
+def error_status(code_msg):
+    print("Status: %s" % code_msg)
+    print()
+    print(code_msg)
+
+def error_status_400_bad_request():
+    error_status("400 Bad Request")
+
+def error_status_405_method_not_allowed():
+    error_status("405 Method Not Allowed")
+
+def error_status_500_internal_server_error():
+    error_status("500 Internal Server Error")
+
+def content_text_plain(body):
+    print("Content-Type: text/plain")
+    print()
+    print(body)
+
+def valid_name_char(c):
+    # Allow only ASCII printable characters except space and slashes.
+    return (ord(c) > 0x20 and   # SPACE
+            ord(c) < 0x7F and   # DEL
+            c != '/' and c != '\\')
+
+def valid_filename(filename):
+    if filename is None or filename == "":
+        return False
+    # Disallow .hidden or -foo files
+    if filename.startswith(".") or filename.startswith("-"):
+        return False
+    for c in filename:
+        if not valid_name_char(c):
+            return False
+    return True
+
+def handle_POST():
+    form = cgi.FieldStorage()
+
+    # The 'file' field must exist.
+    if not "file" in form:
+        error_status_400_bad_request()
+        return
+
+    filefield = form["file"]
+
+    # Reject incomplete requests.
+    if filefield.done == -1:
+        error_status_400_bad_request()
+        return
+
+    # Reject multiple file uploads.
+    if isinstance(filefield, list):
+        error_status_400_bad_request()
+        return
+
+    # Reject missing or invalid file names.
+    if not valid_filename(filefield.filename):
+        error_status_400_bad_request()
+        return
+
+    # Write the request body to a temporary file.
+    with tempfile.NamedTemporaryFile(dir=TMPDIR, delete=False) as fp:
+        tmp_fn = fp.name
+        fp.write(filefield.file.read())
+
+    # Atomically move the temporary file into place.
+    final_fn = os.path.join(DATADIR, filefield.filename)
+    os.replace(tmp_fn, final_fn)
+
+    content_text_plain("Wrote %s" % filefield.filename)
+
+def handle_request():
+    if os.environ['REQUEST_METHOD'] == 'POST':
+        handle_POST()
+    else:
+        error_status_405_method_not_allowed()
+
+if __name__ == "__main__":
+    try:
+        handle_request()
+    except:
+        logging.exception('')
+        error_status_500_internal_server_error()

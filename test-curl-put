@@ -1,0 +1,10 @@
+#!/bin/sh
+set -eu
+
+DIR=$(dirname "$0")
+AUTH=$(cat "$DIR/.test-curl-auth")
+SERVER=${SERVER:-"http://localhost:12022"}
+
+FILE=$1
+
+exec curl -vk -u "$AUTH" "$SERVER/data.put" -F file=@"$FILE"
