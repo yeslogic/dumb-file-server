@@ -1,0 +1,7 @@
+[Unit]
+Description=Dumb file server
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/home/sodumb/sodumb/sodumb.sh
