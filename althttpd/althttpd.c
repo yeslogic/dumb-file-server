@@ -3013,6 +3013,20 @@ void ProcessOneRequest(int forceClose, int socketId){
         "/home", "/index", "/index.html", "/index.cgi"
       };
       int k = j>0 && zLine[j-1]=='/' ? j-1 : j;
+
+      /* Modification: search for a regular file /.index-REQUEST_METHOD
+       * which must be executable. We choose "/.index*" instead of "/-index*"
+       * because a leading "-" requires some trickiness in shebang lines
+       * to avoid being the script name being interpreted as options. */
+      sprintf(&zLine[k], "/.index-%s", zMethod);
+      /* fprintf(stderr, "searching [%s]...\n", zLine); */
+      if( stat(zLine,&statbuf) == 0 &&
+          S_ISREG(statbuf.st_mode) &&
+          access(zLine,X_OK) == 0){
+        break;
+      }
+      /* End modification. */
+
       unsigned int jj;
       for(jj=0; jj<sizeof(azIndex)/sizeof(azIndex[0]); jj++){
         strcpy(&zLine[k],azIndex[jj]);
