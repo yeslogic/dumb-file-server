@@ -6,11 +6,11 @@ import os
 import tempfile
 
 # Enable tracebacks during development
-#import cgitb
-#cgitb.enable()
+# import cgitb
+# cgitb.enable()
 
-DATADIR = "data"
-TMPDIR = "data/.tmp"
+DATADIR = "."
+TMPDIR = ".tmp"
 
 def error_status(code_msg):
     print("Status: %s" % code_msg)
@@ -19,9 +19,6 @@ def error_status(code_msg):
 
 def error_status_400_bad_request():
     error_status("400 Bad Request")
-
-def error_status_405_method_not_allowed():
-    error_status("405 Method Not Allowed")
 
 def error_status_500_internal_server_error():
     error_status("500 Internal Server Error")
@@ -84,15 +81,9 @@ def handle_POST():
 
     content_text_plain("Wrote %s" % filefield.filename)
 
-def handle_request():
-    if os.environ['REQUEST_METHOD'] == 'POST':
-        handle_POST()
-    else:
-        error_status_405_method_not_allowed()
-
 if __name__ == "__main__":
     try:
-        handle_request()
+        handle_POST()
     except:
         logging.exception('')
         error_status_500_internal_server_error()

@@ -7,4 +7,4 @@ SERVER=${SERVER:-"http://localhost:12022"}
 
 FILE=$1
 
-exec curl -vk -u "$AUTH" "$SERVER/data.put" -F file=@"$FILE"
+exec curl -vk -u "$AUTH" "$SERVER/data" -F file=@"$FILE"

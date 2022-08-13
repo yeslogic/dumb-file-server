@@ -36,11 +36,11 @@ HTTP API
 
   - List files (names only, most recent first):
 
-        GET /data.ls
+        GET /data
 
   - Upload file:
 
-        POST /data.put
+        POST /data
 
     The request body must be multipart/form-data with a single "file" field,
     with a "filename" parameter.
