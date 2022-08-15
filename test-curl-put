@@ -1,10 +1,19 @@
-#!/bin/sh
+#!/usr/bin/env bash
+# (for arrays)
 set -eu
 
 DIR=$(dirname "$0")
 AUTH=$(cat "$DIR/.test-curl-auth")
 SERVER=${SERVER:-"http://localhost:12022"}
 
-FILE=$1
+if [ $# = 0 ] ; then
+    echo "missing file arguments" >&2
+    exit 1
+fi
 
-exec curl -vk -u "$AUTH" "$SERVER/data" -F file=@"$FILE"
+FILEARGS=()
+for file ; do
+    FILEARGS+=( -F file=@"$file" )
+done
+
+exec curl -vk -u "$AUTH" "$SERVER/data" "${FILEARGS[@]}"

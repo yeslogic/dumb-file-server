@@ -42,8 +42,8 @@ HTTP API
 
         POST /data
 
-    The request body must be multipart/form-data with a single "file" field,
-    with a "filename" parameter.
+    The request body must be multipart/form-data with one or more "file"
+    fields, each with a "filename" parameter.
 
 File names are restricted to the ASCII printable characters except:
 

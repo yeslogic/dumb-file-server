@@ -23,11 +23,6 @@ def error_status_400_bad_request():
 def error_status_500_internal_server_error():
     error_status("500 Internal Server Error")
 
-def content_text_plain(body):
-    print("Content-Type: text/plain")
-    print()
-    print(body)
-
 def valid_name_char(c):
     # Allow only ASCII printable characters except space and slashes.
     return (ord(c) > 0x20 and   # SPACE
@@ -48,38 +43,53 @@ def valid_filename(filename):
 def handle_POST():
     form = cgi.FieldStorage()
 
-    # The 'file' field must exist.
+    # The request must contain at least one 'file' field.
     if not "file" in form:
         error_status_400_bad_request()
         return
 
-    filefield = form["file"]
+    # The request may contain one or more 'file' fields.
+    filefields = form["file"]
+    if isinstance(filefields, list):
+        pass
+    else:
+        filefields = [filefields]
 
     # Reject incomplete requests.
-    if filefield.done == -1:
-        error_status_400_bad_request()
-        return
-
-    # Reject multiple file uploads.
-    if isinstance(filefield, list):
-        error_status_400_bad_request()
-        return
-
     # Reject missing or invalid file names.
-    if not valid_filename(filefield.filename):
-        error_status_400_bad_request()
-        return
+    # (We could but don't reject duplicate file names.)
+    for filefield in filefields:
+        if filefield.done == -1 or not valid_filename(filefield.filename):
+            error_status_400_bad_request()
+            return
 
-    # Write the request body to a temporary file.
-    with tempfile.NamedTemporaryFile(dir=TMPDIR, delete=False) as fp:
-        tmp_fn = fp.name
-        fp.write(filefield.file.read())
+    # Write the request body to temporary files.
+    tmp_final_fns = []
+    try:
+        for filefield in filefields:
+            final_fn = os.path.join(DATADIR, filefield.filename)
+            with tempfile.NamedTemporaryFile(dir=TMPDIR, delete=False) as tmp_fp:
+                tmp_final_fns.append( (tmp_fp.name, final_fn) )
+                tmp_fp.write(filefield.file.read())
+    except:
+        cleanup_tmp_files(tmp_final_fns)
+        raise   # reraise exception
 
-    # Atomically move the temporary file into place.
-    final_fn = os.path.join(DATADIR, filefield.filename)
-    os.replace(tmp_fn, final_fn)
+    # Move temporary files into final locations.
+    for (tmp_fn, final_fn) in tmp_final_fns:
+        os.replace(tmp_fn, final_fn)
 
-    content_text_plain("Wrote %s" % filefield.filename)
+    print("Content-Type: text/plain")
+    print()
+    for filefield in filefields:
+        print("Wrote %s" % filefield.filename)
+
+def cleanup_tmp_files(tmp_final_fns):
+    for (tmp_fn, _) in tmp_final_fns:
+        try:
+            os.remove(tmp_fn)
+        except:
+            pass
 
 if __name__ == "__main__":
     try:
