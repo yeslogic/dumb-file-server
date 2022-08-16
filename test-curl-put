@@ -16,4 +16,4 @@ for file ; do
     FILEARGS+=( -F file=@"$file" )
 done
 
-exec curl -vk -u "$AUTH" "$SERVER/data" "${FILEARGS[@]}"
+exec curl --verbose --fail-with-body --insecure -u "$AUTH" "$SERVER/data" "${FILEARGS[@]}"

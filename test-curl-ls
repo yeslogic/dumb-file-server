@@ -5,4 +5,4 @@ DIR=$(dirname "$0")
 AUTH=$(cat "$DIR/.test-curl-auth")
 SERVER=${SERVER:-"http://localhost:12022"}
 
-exec curl -vk -u "$AUTH" "$SERVER/data"
+exec curl --verbose --fail-with-body --insecure -u "$AUTH" "$SERVER/data"

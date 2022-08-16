@@ -7,4 +7,4 @@ SERVER=${SERVER:-"http://localhost:12022"}
 
 FILE=$1
 
-exec curl -vk -u "$AUTH" "$SERVER/data/$FILE"
+exec curl --verbose --fail-with-body --insecure -u "$AUTH" "$SERVER/data/$FILE"
